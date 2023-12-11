@@ -6,6 +6,8 @@ import subprocess as SPROC
 import typing as TP
 import xml.etree.ElementTree as ET
 
+import polib as PO
+
 
 @DC.dataclass
 class WowsIo:
@@ -51,6 +53,22 @@ class WowsIo:
         for file_name in (self._working_dir/"banks"/"OfficialMods").glob("*/mod.xml"):
             voice_overs.update(node.text for node in ET.parse(file_name).findall(xpath))
         return sorted(voice_overs)
+
+    def install_names(self, changes: TP.Dict[str, str], language: str = "en") -> None:
+        """Install name mod
+
+        :param changes: Mapping from translation ID's to their new values.
+        :param language: Language code.
+        """
+        if not changes:
+            return
+        mo = PO.mofile(self._wows_dir/"res"/"texts"/language/"LC_MESSAGES"/"global.mo")
+        for entry in mo:
+            if entry.msgid in changes:
+                entry.msgstr = changes[entry.msgid]
+        mod_dir = self._output_dir/"texts"/language/"LC_MESSAGES"
+        OS.makedirs(mod_dir)
+        mo.save(mod_dir/"global.mo")
 
     def install_portraits(self, changes: TP.Dict[PTH.Path, PTH.Path]) -> None:
         """Install portrait mod
