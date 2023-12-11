@@ -62,10 +62,14 @@ class WowsIo:
         """
         if not changes:
             return
+        print(f"Installing name mod for language {language}.")
+
         mo = PO.mofile(self._wows_dir/"res"/"texts"/language/"LC_MESSAGES"/"global.mo")
         for entry in mo:
             if entry.msgid in changes:
-                entry.msgstr = changes[entry.msgid]
+                new_value = changes[entry.msgid]
+                print(" ", f"{entry.msgstr} -> {new_value}")
+                entry.msgstr = new_value
         mod_dir = self._output_dir/"texts"/language/"LC_MESSAGES"
         OS.makedirs(mod_dir)
         mo.save(mod_dir/"global.mo")
@@ -78,9 +82,11 @@ class WowsIo:
         """
         if not changes:
             return
+        print(f"Installing portrait mod.")
         mod_dir = self._output_dir/"gui"/"crew_commander"/"base"
         OS.makedirs(mod_dir)
         for destination, source in changes.items():
+            print(" ", f"{destination} -> {source}")
             full_destination = PTH.Path(mod_dir, destination)
             if not full_destination.parent.is_dir():
                 OS.mkdir(full_destination.parent)
