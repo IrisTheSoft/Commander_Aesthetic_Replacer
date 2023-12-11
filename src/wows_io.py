@@ -3,6 +3,8 @@ import os as OS
 import pathlib as PTH
 import shutil as SHU
 import subprocess as SPROC
+import typing as TP
+import xml.etree.ElementTree as ET
 
 
 @DC.dataclass
@@ -19,6 +21,8 @@ class WowsIo:
         print(" ", "Working directory:", self._working_dir)
         self.clean_dir(self._working_dir)
         self.clean_dir(self._output_dir)
+        self.unpack(PTH.Path("banks", "OfficialMods", "*", "mod.xml"))
+        self.unpack(PTH.Path("gui", "crew_commander", "base", "**"))
 
     def clean_dir(self, dir: PTH.Path) -> None:
         print(f"Cleaning \"{dir}\" directory.")
@@ -36,3 +40,14 @@ class WowsIo:
                    "-p", "../../../res_packages", # Constant required parameter.
                    "-I", pattern.as_posix()],
                    check=True)
+
+    def list_languages(self) -> TP.List[str]:
+        return OS.listdir(self._wows_dir/"res"/"texts")
+
+    def list_voice_overs(self) -> TP.List[str]:
+        xpath = ("./AudioModification/ExternalEvent/Container/Path/StateList" +
+                 "/State[Name='CrewName']/Value")
+        voice_overs = set()
+        for file_name in (self._working_dir/"banks"/"OfficialMods").glob("*/mod.xml"):
+            voice_overs.update(node.text for node in ET.parse(file_name).findall(xpath))
+        return sorted(voice_overs)
