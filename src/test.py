@@ -2,7 +2,6 @@ from wows_io import *
 
 
 io = WowsIo(PTH.Path("F:/SteamLibrary/steamapps/common/World of Warships/bin/7814610"))
-print("AVAILABLE LANGUAGES:")
-print(*io.list_languages())
-print("AVAILABLE VOICE OVERS:")
-print(*io.list_voice_overs())
+io.install_portraits({
+    PTH.Path("Japan", "Akeno_Mashiro.png"): PTH.Path("F:/playground/akeno_mashiro_cropped.png"),
+    PTH.Path("Germany", "Mina_Thea.png"): PTH.Path("F:/playground/thea_wilhelmina_cropped.png")})

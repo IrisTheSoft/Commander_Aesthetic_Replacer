@@ -51,3 +51,19 @@ class WowsIo:
         for file_name in (self._working_dir/"banks"/"OfficialMods").glob("*/mod.xml"):
             voice_overs.update(node.text for node in ET.parse(file_name).findall(xpath))
         return sorted(voice_overs)
+
+    def install_portraits(self, changes: TP.Dict[PTH.Path, PTH.Path]) -> None:
+        """Install portrait mod
+
+        :param changes: Mapping from destination file names to their replacements. The \
+            replacements are not required to be unique.
+        """
+        if not changes:
+            return
+        mod_dir = self._output_dir/"gui"/"crew_commander"/"base"
+        OS.makedirs(mod_dir)
+        for destination, source in changes.items():
+            full_destination = PTH.Path(mod_dir, destination)
+            if not full_destination.parent.is_dir():
+                OS.mkdir(full_destination.parent)
+            SHU.copyfile(source, full_destination)
