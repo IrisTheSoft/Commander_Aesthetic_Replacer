@@ -170,12 +170,13 @@ def main() -> None:
     working_dir = PTH.Path("working")
     io = WowsIo(wows_dir, output_dir, working_dir)
 
-    window = MainWidget(commanders, io.list_languages(),
-                        working_dir/"gui"/"crew_commander"/"base", io.list_voice_overs(),
-                        io)
-    window.setWindowTitle(title)
-    window.show()
-    app.exec()
+    with io:
+        window = MainWidget(commanders, io.list_languages(),
+                            working_dir/"gui"/"crew_commander"/"base",
+                            io.list_voice_overs(), io)
+        window.setWindowTitle(title)
+        window.show()
+        app.exec()
 
 
 if __name__ == "__main__":

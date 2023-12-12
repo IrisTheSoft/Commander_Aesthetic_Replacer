@@ -23,10 +23,16 @@ class WowsIo:
         print(" ", "WoWs directory:", self._wows_dir)
         print(" ", "Output directory:", self._output_dir)
         print(" ", "Working directory:", self._working_dir)
+
+    def __enter__(self):
         self.clean_dir(self._working_dir)
         self.clean_dir(self._output_dir)
         self.unpack(PTH.Path("banks", "OfficialMods", "*", "mod.xml"))
         self.unpack(PTH.Path("gui", "crew_commander", "base", "**"))
+
+    def __exit__(self, *_):
+        print("Cleaning working folder.")
+        SHU.rmtree(self._working_dir)
 
     def clean_dir(self, dir: PTH.Path) -> None:
         print(f"Cleaning \"{dir}\" directory.")
@@ -94,7 +100,7 @@ class WowsIo:
                 OS.mkdir(full_destination.parent)
             SHU.copyfile(source, full_destination)
 
-    def install_voice_overs(self, changes: TP.Dict[str,str], mod_name: str = "My Mod",
+    def install_voice_overs(self, changes: TP.Dict[str, str], mod_name: str = "My Mod",
                             mod_id: str="wcar") -> None:
         """Install voice mod
 
