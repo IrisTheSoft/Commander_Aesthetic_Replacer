@@ -136,6 +136,23 @@ class MainWidget(QTW.QWidget):
                                              voice_overs)
         main_layout.addWidget(self._changes_widget)
 
+        form_layout = QTW.QFormLayout()
+
+        self._language_widget = QTW.QComboBox()
+        self._language_widget.addItems(languages)
+        self._language_widget.setCurrentText("en")
+        form_layout.addRow("Language:", self._language_widget)
+
+        self._voice_mod_name_widget = QTW.QLineEdit()
+        self._voice_mod_name_widget.setText("My Voice Mod")
+        form_layout.addRow("Voice mod name:", self._voice_mod_name_widget)
+
+        self._voice_mod_id_widget = QTW.QLineEdit()
+        self._voice_mod_id_widget.setText("wcar")
+        form_layout.addRow("Voice mod ID:", self._voice_mod_id_widget)
+
+        main_layout.addLayout(form_layout)
+
         self._install_button = QTW.QPushButton()
         self._install_button.setText("Install")
         self._install_button.clicked.connect(self._install)
@@ -146,10 +163,13 @@ class MainWidget(QTW.QWidget):
     def _install(self) -> None:
         self._install_button.setEnabled(False)
         changes = self._changes_widget.get_changes()
+        language = self._language_widget.currentText()
         io = self._io
-        io.install_names(changes.name_changes)
+        io.install_names(changes.name_changes, language)
         io.install_portraits(changes.portrait_changes)
-        io.install_voice_overs(changes.voice_changes)
+        io.install_voice_overs(changes.voice_changes,
+                               self._voice_mod_name_widget.text(),
+                               self._voice_mod_id_widget.text())
         self._install_button.setText("Success!")
         print("Success!")
 
