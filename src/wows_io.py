@@ -1,3 +1,4 @@
+import copy as CP
 import dataclasses as DC
 import os as OS
 import pathlib as PTH
@@ -6,6 +7,7 @@ import subprocess as SPROC
 import typing as TP
 import xml.etree.ElementTree as ET
 
+import jinja2 as JJ
 import polib as PO
 
 
@@ -82,7 +84,7 @@ class WowsIo:
         """
         if not changes:
             return
-        print(f"Installing portrait mod.")
+        print("Installing portrait mod.")
         mod_dir = self._output_dir/"gui"/"crew_commander"/"base"
         OS.makedirs(mod_dir)
         for destination, source in changes.items():
@@ -91,3 +93,91 @@ class WowsIo:
             if not full_destination.parent.is_dir():
                 OS.mkdir(full_destination.parent)
             SHU.copyfile(source, full_destination)
+
+    def install_voice_overs(self, changes: TP.Dict[str,str], mod_name: str = "My Mod",
+                            mod_id: str="wcar") -> None:
+        """Install voice mod
+
+        :param changes: Mapping from voice recipients to their donors.
+        :param mod_name: In-game identifier for the mod.
+        :param mod_id: Technical identifier for the mod.
+        """
+
+        if not changes:
+            return
+
+        print(f"Installing voice mod named \"{mod_name}\" into {mod_id}.")
+        for recipient_name, donor_name in changes.items():
+            print(" ", f"{recipient_name} -> {donor_name}")
+
+        mod_dir = self._output_dir/"banks"/"Mods"/mod_id
+        OS.makedirs(mod_dir)
+        events = {}
+        xpaths = ["./AudioModification/ExternalEvent/Container/Path/StateList" +
+                  f"/State[Name='CrewName'][Value='{donor_name}']/../.."
+                  for donor_name in set(changes.values())]
+
+        for source_mod_file_name \
+         in (self._working_dir/"banks"/"OfficialMods").glob("*/mod.xml"):
+            tree = ET.parse(source_mod_file_name)
+            files_to_move = set()
+            source_mod_name = source_mod_file_name.parent.name
+
+            # Identify required audio files.
+            file_name_nodes = set().union(*(tree.iterfind(xpath + "/FilesList/File/Name")
+                                            for xpath in xpaths))
+            for file_name_node in file_name_nodes:
+                files_to_move.add(file_name_node.text)
+                # Deal with naming conflicts.
+                file_name_node.text = f"{source_mod_name}/{file_name_node.text}"
+
+            external_event_nodes = set().union(*(tree.iterfind(xpath + "/../..")
+                                                 for xpath in xpaths))
+            for external_event_node in external_event_nodes:
+                external_event = external_event_node.find("./Name").text
+                # The program assumes these conditions when generating the result
+                # tree from the Jinja template.
+                assert "V" + external_event[5:] == \
+                    external_event_node.find("./Container/ExternalId").text, \
+                    "Failed to derive ExternalId from ExternalEvent/Name"
+                assert external_event_node.find("./Container/Name").text == \
+                    "Voice", \
+                    "Failed to guess structure of ExternalEvent"
+                if external_event not in events:
+                    # Register external event. Matching external events from all mod
+                    # files will be merged into this list.
+                    events[external_event] = []
+
+                for path_node in external_event_node.iterfind("./Container/Path"):
+                    name_value_node = \
+                        path_node.find("./StateList/State[Name='CrewName']/Value")
+                    for recipient_name, donor_name in changes.items():
+                        if donor_name == name_value_node.text:
+                            # Copy is required for supporting multiple commanders with
+                            # same voice over.
+                            new_node = CP.deepcopy(path_node)
+                            new_node.find("./StateList/State[Name='CrewName']/Value") \
+                                .text = recipient_name
+                            events[external_event].append(ET.tostring(new_node,
+                                                                      "unicode"))
+
+            if files_to_move:
+                # Unpacking every wem in the directory is faster than invoking unpacker
+                # once for every file.
+                self.unpack(PTH.Path("banks", "OfficialMods", source_mod_name, "*.wem"))
+                OS.mkdir(mod_dir/source_mod_name)
+                for file_name in files_to_move:
+                    SHU.move(self._working_dir/"banks"/"OfficialMods"/source_mod_name/
+                             file_name,
+                             mod_dir/source_mod_name/file_name)
+                # Clean used part of the working directory.
+                SHU.rmtree(self._working_dir/"banks"/"OfficialMods"/source_mod_name)
+
+        with open("src/voice_mod_template.xml.jinja") as template_file:
+            template = JJ.Template(template_file.read())
+
+        with open(mod_dir/"mod.xml", "w") as output_xml:
+            for line in template.render(mod_name=mod_name, events=events).split("\n"):
+                if not line.isspace():
+                    output_xml.write(line)
+                    output_xml.write("\n")
