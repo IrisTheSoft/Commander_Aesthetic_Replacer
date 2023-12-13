@@ -202,7 +202,6 @@ class MainWidget(QTW.QWidget):
         io.install_voice_overs(changes.voice_changes,
                                self._voice_mod_name_widget.text(),
                                self._voice_mod_id_widget.text())
-        self._save_session()
         self._install_button.setText("Success!")
         print("Success!")
 

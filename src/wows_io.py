@@ -49,7 +49,7 @@ class WowsIo:
                    "-o", self._working_dir.as_posix(),
                    "-p", "../../../res_packages", # Constant required parameter.
                    "-I", pattern.as_posix()],
-                   check=True)
+                   check=True, shell=True)
 
     def list_languages(self) -> TP.List[str]:
         return OS.listdir(self._wows_dir/"res"/"texts")
@@ -179,7 +179,8 @@ class WowsIo:
                 # Clean used part of the working directory.
                 SHU.rmtree(self._working_dir/"banks"/"OfficialMods"/source_mod_name)
 
-        with open("src/voice_mod_template.xml.jinja") as template_file:
+        with open(PTH.Path(__file__).parent/"voice_mod_template.xml.jinja") \
+         as template_file:
             template = JJ.Template(template_file.read())
 
         with open(mod_dir/"mod.xml", "w") as output_xml:
