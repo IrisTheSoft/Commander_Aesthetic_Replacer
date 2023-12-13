@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<AudioModification.xml>
+    <AudioModification>
+        <Name>{{ mod_name }}</Name>
+        {% for external_event_name, paths in events.items() %}
+        <ExternalEvent>
+            <Name>{{ external_event_name }}</Name>
+            <Container>
+                <Name>Voice</Name>
+                <ExternalId>{{ "V" + external_event_name[5:] }}</ExternalId>
+                {% for path in paths %}
+                {{ path|safe }}
+                {% endfor %}
+            </Container>
+        </ExternalEvent>
+        {% endfor %}
+    </AudioModification>
+</AudioModification.xml>
