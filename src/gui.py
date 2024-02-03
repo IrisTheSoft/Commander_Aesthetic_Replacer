@@ -230,9 +230,7 @@ def main() -> None:
     if not wows_dir:
         raise RuntimeError("Invalid WoWs folder.")
     wows_dir = PTH.Path(wows_dir)
-    auto_install = QTW.QMessageBox.question(None, "Auto-install?",
-     "Install automatically?\n\u26A0 This will irreversibly erase the res_mods folder.")
-    output_dir = wows_dir/"res_mods" if auto_install else PTH.Path("output")
+    output_dir = wows_dir/"res_mods"
     working_dir = PTH.Path("working")
     io = WowsIo(wows_dir, output_dir, working_dir)
 

@@ -16,8 +16,6 @@ You need to place `wowsunpack.exe` (not distributed here) at the tool's root fol
 
 When opening the GUI, you will be greeted by a file dialog. Select the folder World of Warships is installed. It should look something like `<<SOMETHING>>/World of Warships/bin/<<SOME_NUMBER>>`. Usually, the highest number is the one you want.
 
-Then you will be prompted if you want automatic installation. Choosing "yes" will clean the game's `res_mods` folder, which can be undesirable if you have other mods installed. If choosing "no", after the tool finishes its job you will need to move the contents of the tool's `output` folder to the game's `res_mods`.
-
 Next, the main window is shown. There you can configure the mod. Session is saved automatically when closing this window at any time. To add change(s) for a new commander, press the "add" button.
 
 The first column ("Commander") refers to the recipient commander and the next 3 columns are the new values you want for them. To keep a value as it is, leave the input blank (or pick "(None)" in the case of voice over). You can empty the portrait input by clicking "select" and then closing the file dialog.
@@ -25,8 +23,6 @@ The first column ("Commander") refers to the recipient commander and the next 3 
 The form at the bottom includes additional options. In "language", pick the language you use in the game. The "voice mod name" will be the name of the mod in the in-game settings. You probably do not care about the "voice mod ID" (it is only used for naming a folder).
 
 When you are ready, press the "install" button and wait. Once it changes to "success" you are free to close the window.
-
-If you rejected auto installation, move the contents of the tool's `output` folder to the game's `res_mods` at this point.
 
 Now launch the game. Go to `settings > audio > voice` and set "modification" to the name of your mod.
 

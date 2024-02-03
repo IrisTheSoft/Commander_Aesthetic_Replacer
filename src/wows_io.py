@@ -26,7 +26,6 @@ class WowsIo:
 
     def __enter__(self):
         self.clean_dir(self._working_dir)
-        self.clean_dir(self._output_dir)
         self.unpack(PTH.Path("banks", "OfficialMods", "*", "mod.xml"))
         self.unpack(PTH.Path("gui", "crew_commander", "base", "**"))
 
