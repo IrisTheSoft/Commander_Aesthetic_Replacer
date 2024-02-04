@@ -3,6 +3,7 @@ import dataclasses as DC
 import json as JSON
 import pathlib as PTH
 import sys as SYS
+import threading as THR
 import typing as TP
 
 import PySide6.QtCore as QTC
@@ -143,6 +144,18 @@ class ChangesWidget(QTW.QWidget):
         return changes
 
 
+class Worker(QTC.QObject):
+
+    finished = QTC.Signal()
+
+    def __init__(self, function, *args, **kwargs):
+        super().__init__()
+        self.function = lambda: function(*args, **kwargs)
+
+    def __call__(self):
+        self.function()
+        self.finished.emit()
+
 
 class MainWidget(QTW.QWidget):
 
@@ -152,6 +165,8 @@ class MainWidget(QTW.QWidget):
                  session: TP.Optional[dict] = None):
         super().__init__()
         self._io = io
+        self._threadpool = QTC.QThreadPool()
+
         main_layout = QTW.QVBoxLayout()
 
         self._changes_widget = ChangesWidget(commanders, default_portrait_dir,
@@ -194,16 +209,26 @@ class MainWidget(QTW.QWidget):
 
     def _install(self) -> None:
         self._install_button.setEnabled(False)
+        self._install_button.setText("Installing...")
         changes = self._changes_widget.get_changes()
         language = self._language_widget.currentText()
+        voice_mod_name = self._voice_mod_name_widget.text()
+        voice_mod_id = self._voice_mod_id_widget.text()
         io = self._io
-        io.install_names(changes.name_changes, language)
-        io.install_portraits(changes.portrait_changes)
-        io.install_voice_overs(changes.voice_changes,
-                               self._voice_mod_name_widget.text(),
-                               self._voice_mod_id_widget.text())
-        self._install_button.setText("Success!")
-        print("Success!")
+
+        def install():
+            io.install_names(changes.name_changes, language)
+            io.install_portraits(changes.portrait_changes)
+            io.install_voice_overs(changes.voice_changes, voice_mod_name, voice_mod_id)
+
+        def notify_success():
+            self._install_button.setText("Success!")
+            print("Success!")
+
+        installer = Worker(install)
+        installer.finished.connect(notify_success)
+        self._threadpool.start(installer)
+
 
     def _save_session(self) -> None:
         print("Saving session.")
@@ -250,4 +275,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as error:
+        raise error
